@@ -1,4 +1,4 @@
-### Ομάδα Bits Please
+### Ομάδα: Bits Please
 
 __Μέλη__
 
