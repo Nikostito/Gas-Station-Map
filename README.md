@@ -7,5 +7,5 @@ __Μέλη__
 |Σουλιώτης|Γεώργιος|03114201|george_astrobip96@hotmail.com
 |Νικολαΐδης|Μάριος|03114891|el14891@central.ntua.gr
 |Τιτομιχελάκης|Νικόλαος-Ιωάννης|03114805|nikostito@me.com
-|Τσιτούρας|Στράτος|03109196|stratos1991@yahoo.gr
+|Τσιτούρας|Ευστράτιος|03109196|stratos1991@yahoo.gr
 |Μανιουδάκη |Ευαγγελία|03114841|evangelia.manioudaki@gmail.com
