@@ -6,17 +6,17 @@ A quick setup guide (based on a clean Ubuntu 18.04.1 LTS)
 ## Getting the files thru Git(first time)
 Install git:
 ```
-    sudo apt-get update
-    sudo apt-get install git-core
+sudo apt-get update
+sudo apt-get install git-core
 ```
 Make sure to set your name/email *exactly* the same as your gitlab account:
 ```
-    git config --global user.name "testuser"
-    git config --global user.email "testuser@example.com"
+git config --global user.name "testuser"
+git config --global user.email "testuser@example.com"
 ```
 Get the files:
 ```
-    git clone https://gitlab.com/bits-please-softeng18/benzinadika.git
+git clone https://gitlab.com/bits-please-softeng18/benzinadika.git
 ```
 ## Getting the files thru Git(already have cloned the repository)
 
