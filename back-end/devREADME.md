@@ -28,7 +28,7 @@ First, download nvm:
 
     wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
 
-**Close and reopen terminal** then execute:
+after it's finished downloading **close and reopen terminal** then execute:
 ```
 nvm install --lts
 ```
