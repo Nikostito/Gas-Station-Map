@@ -5,10 +5,10 @@ A quick setup guide (based on a clean Ubuntu 18.04.1 LTS)
 
 ## Getting the files thru Git(first time)
 Install git:
-`
+```
     sudo apt-get update
     sudo apt-get install git-core
-`
+```
 Make sure to set your name/email *exactly* the same as your gitlab account:
 `
     git config --global user.name "testuser"
