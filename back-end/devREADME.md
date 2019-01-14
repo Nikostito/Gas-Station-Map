@@ -1,0 +1,63 @@
+Note to developers
+========================
+
+A quick setup guide (based on a clean Ubuntu 18.04.1 LTS)
+
+## Getting the files thru Git(first time)
+Install git through an online tutorial
+Make sure to set your name/email *exactly* the same as your gitlab account:
+
+    git config --global user.name "testuser"
+    git config --global user.email "testuser@example.com"
+
+Get the files:
+
+    git clone https://gitlab.com/bits-please-softeng18/benzinadika.git
+
+## Getting the files thru Git(already have cloned the repository)
+
+    git pull
+
+## Nodejs and npm
+
+First, download nvm:
+
+    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
+
+Then execute:
+
+    nvm install --lts
+
+## Install the dependencies and devDependencies
+
+Inside the app's root folder (/benzinadika/back-end) execute:
+
+    npm install -d
+
+## Start the server (simple)
+
+Inside the app's root folder (/back-end) execute:
+
+    node server.js
+
+##Start the server (automated restart of the server after file changes)
+
+    npm start
+
+## Simple test
+
+Go to:
+
+http://localhost:8765/observatory/api/products
+
+You should see text in JSON format:
+```json
+message	"GEEEET"
+lol	"d"
+```
+
+##Recommender editor
+    https://code.visualstudio.com/docs/setup/linux
+
+##Recommender api tester tool (non automated)
+    postman
