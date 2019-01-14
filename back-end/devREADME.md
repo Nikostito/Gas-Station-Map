@@ -9,7 +9,7 @@ Install git:
 sudo apt-get update
 sudo apt-get install git-core
 ```
-Make sure to set your name/email *exactly* the same as your gitlab account:
+Make sure to set your name/email **exactly** the same as your gitlab account:
 ```
 git config --global user.name "testuser"
 git config --global user.email "testuser@example.com"
@@ -28,10 +28,10 @@ First, download nvm:
 
     wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
 
-Then execute:
-
-    nvm install --lts
-
+**Close and reopen terminal** then execute:
+```
+nvm install --lts
+```
 ## Install the dependencies and devDependencies
 
 Inside the app's root folder (/benzinadika/back-end) execute:
@@ -66,3 +66,7 @@ lol	"d"
     postman
 ## Recommended Tutorials
     https://www.youtube.com/watch?v=0oXYLzuucwE&list=PL55RiY5tL51q4D-B63KBnygU6opNPFk_q
+## In case of problems during nvm installation, make sure you have the following
+    sudo apt-get install gcc
+    sudo apt-get install g++
+    sudo apt-get install python
