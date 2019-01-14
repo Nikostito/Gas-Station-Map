@@ -34,14 +34,14 @@ app.use((req, res, next) => {
 
 const productRoutes = require('./api/routes/products');
 const shopRoutes = require('./api/routes/shops');
-
+const priceRoutes = require('./api/routes/prices');
 const loginRoute = require('./api/routes/login');
 const logoutRoute = require('./api/routes/logout');
 
 //  Routes handling requests
 app.use(baseURL + '/products', productRoutes);
 app.use(baseURL + '/shops', shopRoutes);
-
+app.use(baseURL + '/prices', priceRoutes);
 app.use(baseURL + '/login', loginRoute);
 app.use(baseURL + '/logout', logoutRoute);
 
