@@ -10,14 +10,14 @@ Install git:
     sudo apt-get install git-core
 ```
 Make sure to set your name/email *exactly* the same as your gitlab account:
-`
+```
     git config --global user.name "testuser"
     git config --global user.email "testuser@example.com"
-`
+```
 Get the files:
-`
+```
     git clone https://gitlab.com/bits-please-softeng18/benzinadika.git
-`
+```
 ## Getting the files thru Git(already have cloned the repository)
 
     git pull
@@ -52,7 +52,7 @@ Inside the app's root folder (/back-end) execute:
 
 Go to:
 
-http://localhost:8765/observatory/api/products
+    http://localhost:8765/observatory/api/products
 
 You should see text in JSON format:
 ```json
