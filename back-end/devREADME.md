@@ -4,14 +4,15 @@ Note to developers
 A quick setup guide (based on a clean Ubuntu 18.04.1 LTS)
 
 ## Getting the files thru Git(first time)
-Install git through an online tutorial
+Install git:
+    sudo apt-get update
+    sudo apt-get install git-core
+    
 Make sure to set your name/email *exactly* the same as your gitlab account:
-
     git config --global user.name "testuser"
     git config --global user.email "testuser@example.com"
 
 Get the files:
-
     git clone https://gitlab.com/bits-please-softeng18/benzinadika.git
 
 ## Getting the files thru Git(already have cloned the repository)
@@ -40,7 +41,7 @@ Inside the app's root folder (/back-end) execute:
 
     node server.js
 
-##Start the server (automated restart of the server after file changes)
+## Start the server (automated restart of the server after file changes)
 
     npm start
 
@@ -56,8 +57,9 @@ message	"GEEEET"
 lol	"d"
 ```
 
-##Recommender editor
+## Recommended editor
     https://code.visualstudio.com/docs/setup/linux
-
-##Recommender api tester tool (non automated)
+## Recommended api tester tool (non automated)
     postman
+## Recommended Tutorials
+    https://www.youtube.com/watch?v=0oXYLzuucwE&list=PL55RiY5tL51q4D-B63KBnygU6opNPFk_q
