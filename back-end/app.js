@@ -1,24 +1,40 @@
 /* eslint-disable comma-dangle */
-
+/* ALWAYS USE res.json() to ensure that the Content-Type is
+/* application/json; charset=utf-8
+/* as requested by the api specs  */
 'use strict';
+
+// Import modules
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-try {
+const mongoose = require('mongoose');
+const check_xml = require('./api/middleware/check-xml');
+// Morgan is not a dependency in production mode and will not load
+if (process.env.NODE_ENV !== 'production'){
   const morgan = require('morgan');
   app.use(morgan('dev'));
-} catch (e){
-  /* Morgan is not a dependency in production mode and will not load */
 }
+
 
 const baseURL = '/observatory/api';
 
+mongoose.set('useNewUrlParser', true);
+mongoose.set('useCreateIndex', true);
+mongoose.connect(process.env.MONGODB_CONNECTION_URL);
+
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  console.log('mongoose connected!');
+});
 
 app.use(bodyParser.urlencoded({
   extended: false
 }));
 app.use(bodyParser.json());
 
+// Allow CORS
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header(
@@ -32,9 +48,13 @@ app.use((req, res, next) => {
   next();
 });
 
+// Reject XML requests (team size <7)
+app.use(check_xml);
+
 const productRoutes = require('./api/routes/products');
 const shopRoutes = require('./api/routes/shops');
 const priceRoutes = require('./api/routes/prices');
+const signupRoute = require('./api/routes/signup');
 const loginRoute = require('./api/routes/login');
 const logoutRoute = require('./api/routes/logout');
 
@@ -42,6 +62,7 @@ const logoutRoute = require('./api/routes/logout');
 app.use(baseURL + '/products', productRoutes);
 app.use(baseURL + '/shops', shopRoutes);
 app.use(baseURL + '/prices', priceRoutes);
+app.use(baseURL + '/signup', signupRoute);
 app.use(baseURL + '/login', loginRoute);
 app.use(baseURL + '/logout', logoutRoute);
 

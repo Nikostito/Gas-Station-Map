@@ -38,15 +38,31 @@ Inside the app's root folder (/benzinadika/back-end) execute:
 
     npm install -d
 
-## Start the server (simple)
+## Install mongodb server locally
 
-Inside the app's root folder (/back-end) execute:
+Follow this link: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/
 
-    node server.js
+## Start/Stop local mongodb server
 
-## Start the server (automated restart of the server after file changes)
+Start script:
+
+    ./devScripts/start_local_mongodb_service.sh
+
+Stop script:
+
+    ./devScripts/stop_local_mongodb_service.sh
+
+## Choosing an online mongodb service
+
+Edit the **MONGODB_CONNECTION_URL** attribute in **nodemon.json** (see below)
+
+## Start the server (server autorestarts after file changes)
 
     npm start
+
+## nodemon.json
+
+Environment variables (e.g.: process.env.PORT) go in this file. **Changing those will require ***manual*** restart of the server**, that mean stopping nodemon (CTRL+C) and firing it up again. 
 
 ## Simple test
 
@@ -66,6 +82,8 @@ lol	"d"
     postman
 ## Recommended Tutorials
     https://www.youtube.com/watch?v=0oXYLzuucwE&list=PL55RiY5tL51q4D-B63KBnygU6opNPFk_q
+## Recommended local mongodb service GUI (choose community edition)
+    https://docs.mongodb.com/compass/current/
 ## In case of problems during nvm installation, make sure you have the following
     sudo apt-get install gcc
     sudo apt-get install g++
