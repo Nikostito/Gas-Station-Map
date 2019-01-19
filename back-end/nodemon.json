@@ -2,6 +2,8 @@
   "env":{
     "NODE_ENV": "development",
     "MONGODB_CONNECTION_URL": "mongodb://localhost/test",
-    "PORT":8765
+    "PORT":8765,
+    "JWT_KEY": "a-random-string-17of#$rpwr@&%e#@^&s42",
+    "AUTH_HEADER": "X-OBSERVATORY-AUTH"
   }
 }

@@ -33,7 +33,6 @@ router.post('/', (req, res, next) => {
               _id: new mongoose.Types.ObjectId(),
               username: req.body.username,
               password: hash,
-              token: false, // No token gets created at signup
               admin: false, // Admin status can be given by an existing admin
             });
 
