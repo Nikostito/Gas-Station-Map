@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* eslint-disable comma-dangle */
 'use strict';
 // TODO:
@@ -36,8 +37,24 @@ router.post('/', (req, res, next) => {
             }
           );
           // Token success, insert token in database for future invalidation purposes
-          user.tokens.push({ _id: jwtToken });
-          user
+          AUser.updateOne(
+            { _id: user._id },
+            { $push: { tokens: {_id: jwtToken} } },
+            (err) => {
+              if (err){
+                console.log(err);
+                return res.status(500).json({
+                  error: err
+                });
+              }
+              return res.status(200)
+                .header(process.env.AUTH_HEADER, jwtToken).json();
+
+            }
+          );
+          /* Possible non-atomic push? (also look @ mongoose _v)
+           user.tokens.push({ _id: jwtToken });
+            user
             .save()
             .then((resul) => {
               return res.status(200)
@@ -49,7 +66,7 @@ router.post('/', (req, res, next) => {
                 error: err
               });
             });
-
+            */
         } else {
           console.log('Wrong password');
           res.status(400).json({

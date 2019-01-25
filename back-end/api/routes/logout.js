@@ -19,7 +19,23 @@ router.post('/', checkAuth, (req, res, next) => {
           error: 'Server Error'
         });
       }
-
+      AUser.updateOne(
+        { _id: user._id },
+        { $pull: { tokens: {_id: req.jwtTokenID} } },
+        (err, raw) => {
+          if (err){
+            console.log(err);
+            return res.status(500).json({
+              error: err
+            });
+          }
+          console.log(raw);
+          res.status(200).json({
+            message: 'OK' // API specs
+          });
+        }
+      );
+      /* Possible non-atomic remove? Prefer the above (also look @ mongoose _v)
       user.tokens.id(req.jwtTokenID).remove();
       user
         .save()
@@ -35,6 +51,7 @@ router.post('/', checkAuth, (req, res, next) => {
             error: err
           });
         });
+        */
     });
 });
 

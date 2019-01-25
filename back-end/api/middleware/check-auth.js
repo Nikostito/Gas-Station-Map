@@ -12,10 +12,12 @@ function check_auth(req, res, next){
     AUser.findOne({ username: decoded.username })
       .exec()
       .then(user => {
-        if (!user.tokens.id(token))
+        if (!user.tokens.id(token)){
+          console.log('check-auth: invalid JWT, not in mongodb');
           return res.status(403).json({
             message: '403 - Forbidden', // API spec
           });
+        }
         // Token is valid
         // Pass these to protected routes, eg. logout route
         // for future invalidation purposes
@@ -31,7 +33,7 @@ function check_auth(req, res, next){
       });
   } catch (err) {
     // API specs, user is not authenticated
-    console.log('Not authenticated / Verify fail');
+    console.log('check-auth: invalid JWT / not authenticated');
     const error = new Error('403 - Forbidden');
     error.status = 403;
     next(error);
