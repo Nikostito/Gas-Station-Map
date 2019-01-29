@@ -6,7 +6,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const AUser = require('../models/auth_user');
+const AUser = require('../models/user');
 
 router.post('/', (req, res, next) => {
   AUser.findOne({ username: req.body.username })

@@ -1,6 +1,6 @@
 'use strict';
 const jwt = require('jsonwebtoken');
-const AUser = require('../models/auth_user');
+const AUser = require('../models/user');
 
 function check_auth(req, res, next){
   try {

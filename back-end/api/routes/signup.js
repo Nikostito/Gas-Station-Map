@@ -5,7 +5,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
-const AUser = require('../models/auth_user');
+const AUser = require('../models/user');
 
 
 router.post('/', (req, res, next) => {

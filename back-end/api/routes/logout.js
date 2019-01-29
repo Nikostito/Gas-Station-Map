@@ -5,7 +5,7 @@ const express = require('express');
 const router = express.Router();
 const checkAuth = require('../middleware/check-auth');
 
-const AUser = require('../models/auth_user');
+const AUser = require('../models/user');
 
 router.post('/', checkAuth, (req, res, next) => {
   // Invalidate token
