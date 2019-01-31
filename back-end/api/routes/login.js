@@ -33,7 +33,7 @@ router.post('/', (req, res, next) => {
             },
             process.env.JWT_KEY,
             {
-              expiresIn: '1h'
+              expiresIn: '10h'
             }
           );
           // Token success, insert token in database for future invalidation purposes

@@ -4,7 +4,6 @@
 'use strict';
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
 const checkAuth = require('../middleware/check-auth');
 const Product = require('../models/product');
 
@@ -19,17 +18,14 @@ function productWrapper(){
   return newProduct;
 }
 
-function isUniqueFieldUpdate(prod){
+function countUpdatedFields(prod){
   let i = 0;
   for (var field in prod){
     if (prod[field]){
       i++;
     }
   }
-  if (i === 1)
-    return true;
-  else
-    return false;
+  return i;
 }
 
 function uniqueField(prod){
@@ -164,6 +160,7 @@ router.get('/', (req, res, next) => {
 // Create a product
 router.post('/', checkAuth, (req, res, next) => {
   // a single string as a tag will be ACCEPTED as an array with that string
+  // numbers & booleans will be coerced to strings
   const product = new Product({
     name: req.body.name,
     description: req.body.description,
@@ -181,10 +178,11 @@ router.post('/', checkAuth, (req, res, next) => {
     .catch(err => {
       // Check empty strings OR name not unique
       if (err.hasOwnProperty('name')){
-        if (err.name === 'ValidationError' || err.codeName === 'DuplicateKey'){
+        if (err.name === 'ValidationError' || err.code === 11000){
           console.log(err);
           return res.status(400).json({
-            error: '400 - Bad Request'
+            error: '400 - Bad Request',
+            message: err.code === 11000 ? 'name already exists' : 'empty field'
           });
         }
       }
@@ -233,7 +231,6 @@ router.put('/:productId', checkAuth, (req, res, next) => {
     category: req.body.category,
     tags: req.body.tags
   };
-  partialUpdateProductValidation(updatedProduct);
   Product
     .findByIdAndUpdate(
       id,
@@ -243,6 +240,11 @@ router.put('/:productId', checkAuth, (req, res, next) => {
     .select('-_id id name description category tags withdrawn')
     .exec()
     .then(resultedProduct => {
+      if (!resultedProduct){
+        const error = new Error();
+        error.name = 'Null product';
+        throw error;
+      }
       console.log(resultedProduct);
       res.status(200).json({
         resultedProduct
@@ -250,7 +252,8 @@ router.put('/:productId', checkAuth, (req, res, next) => {
     })
     .catch(err => {
       if (err.hasOwnProperty('name')){
-        if (err.name === 'ValidationError' || err.codeName === 'DuplicateKey'){
+        if (err.name === 'ValidationError' || err.codeName === 'DuplicateKey'
+        || err.name === 'CastError' || err.name === 'Null product') {
           console.log(err);
           return res.status(400).json({
             error: '400 - Bad Request',
@@ -274,8 +277,9 @@ router.patch('/:productId', checkAuth, (req, res, next) => {
     tags: req.body.tags
   };
   let updatedField;
+  // Should implement custom validation to prevent boolean and integer coercion
   // in case of either zero input or >1 fields
-  if (!isUniqueFieldUpdate(updatedProduct)){
+  if (countUpdatedFields(updatedProduct) !== 1){
     return res.status(400).json({
       error: '400 - Bad Request',
       message: 'Zero, or more than one fields specified'
@@ -287,11 +291,16 @@ router.patch('/:productId', checkAuth, (req, res, next) => {
     .findByIdAndUpdate(
       id,
       { $set: updatedField},
-      {new: true}
+      {new: true, runValidators: true}
     )
     .select('-_id id name description category tags withdrawn')
     .exec()
     .then(resultedProduct => {
+      if (!resultedProduct){
+        const error = new Error();
+        error.name = 'Null product';
+        throw error;
+      }
       console.log(resultedProduct);
       res.status(200).json({
         resultedProduct
@@ -299,7 +308,8 @@ router.patch('/:productId', checkAuth, (req, res, next) => {
     })
     .catch(err => {
       if (err.hasOwnProperty('name')){
-        if (err.name === 'ValidationError' || err.codeName === 'DuplicateKey'){
+        if (err.name === 'ValidationError' || err.codeName === 'DuplicateKey'
+        || err.name === 'CastError' || err.name === 'Null product') {
           console.log(err);
           return res.status(400).json({
             error: '400 - Bad Request',
@@ -315,9 +325,85 @@ router.patch('/:productId', checkAuth, (req, res, next) => {
 
 // DELETE product
 router.delete('/:productId', checkAuth, (req, res, next) => {
-  res.status(200).json({
-    message: 'Deleted product!'
-  });
+  const id = req.params.productId;
+  // find if authorized user has admin priviledges
+  if (req.userHasAdminPriviledges){
+    Product.deleteOne({ _id: id })
+      .exec()
+      .then(result => {
+        console.log('admin delete');
+        console.log(result);
+        // if nothing was deleted
+        if (result.n === 0){
+          const error = new Error();
+          error.name = 'Null product';
+          throw error;
+        }
+        // TODO: Delete price as well (?Should empty shops be deleted? Probably not)
+        res.status(200).json({
+          message: 'OK'
+        });
+      })
+      .catch(err => {
+        if (err.hasOwnProperty('name')){
+          if (err.name === 'CastError' || err.name === 'Null product') {
+            console.log(err);
+            return res.status(400).json({
+              error: '400 - Bad Request',
+              message: 'No product with this id. Note to devs: is this error supposed to be 401 not authorized?)'
+            });
+          }
+        }
+        console.log(err);
+        res.status(524).json({
+          error: err
+        });
+      });
+  } else {
+    Product
+      .updateOne({_id: id}, {$set: {withdrawn: true}})
+      .exec()
+      .then(result => {
+        console.log('user delete');
+        console.log(result);
+        // if nothing was deleted
+        if (result.n === 0){
+          const error = new Error();
+          error.name = 'Null product';
+          throw error;
+        }
+        // if product was withdrawn previously
+        if (result.nModified === 0){
+          const error = new Error();
+          error.name = 'Product already withdrawn';
+          throw error;
+        }
+        res.status(200).json({
+          message: 'OK'
+        });
+      })
+      .catch(err => {
+        if (err.hasOwnProperty('name')){
+          if (err.name === 'CastError' || err.name === 'Null product') {
+            console.log(err);
+            return res.status(400).json({
+              error: '400 - Bad Request',
+              message: 'No product with this id. Note to devs: is this error supposed to be 401 not authorized?)'
+            });
+          }
+          if (err.name === 'Product already withdrawn'){
+            return res.status(401).json({
+              error: '401 - Not Authorized', // Check if this is the correct error code
+              message: err.name
+            });
+          }
+        }
+        console.log(err);
+        return res.status(525).json({
+          error: err,
+        });
+      });
+  }
 });
 
 module.exports = router;

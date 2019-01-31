@@ -23,6 +23,7 @@ function check_auth(req, res, next){
         // for future invalidation purposes
         req.userDataTakenFromJwtToken = decoded;
         req.jwtTokenID = token;
+        req.userHasAdminPriviledges = user.admin;
         next();
       })
       .catch(err => {
