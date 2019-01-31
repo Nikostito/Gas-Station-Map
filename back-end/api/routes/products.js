@@ -13,7 +13,8 @@ function productWrapper(){
     name: this.name,
     description: this.description,
     category: this.category,
-    tags: this.tags
+    tags: this.tags,
+    withdrawn: this.withdrawn
   };
   return newProduct;
 }
@@ -159,8 +160,10 @@ router.get('/', (req, res, next) => {
 
 // Create a product
 router.post('/', checkAuth, (req, res, next) => {
+
   // a single string as a tag will be ACCEPTED as an array with that string
-  // numbers & booleans will be coerced to strings
+  // numbers & booleans will be coerced to strings if model type is string
+  // SOS / TODO / Should withdrawn be set at creation?
   const product = new Product({
     name: req.body.name,
     description: req.body.description,
