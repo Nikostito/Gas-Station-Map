@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const productSchema = mongoose.Schema({
   // Non strings do not throw error, but are coerced!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   id: mongoose.Schema.Types.ObjectId,
+  // product name unique (?)
   name: {type: String, required: true, unique: true},
   description: { type: String, required: true },
   category: { type: String, required: true },
