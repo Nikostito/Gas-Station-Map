@@ -160,17 +160,24 @@ router.get('/', (req, res, next) => {
 
 // Create a product
 router.post('/', checkAuth, (req, res, next) => {
-
-  // a single string as a tag will be ACCEPTED as an array with that string
   // numbers & booleans will be coerced to strings if model type is string
   // SOS / TODO / Should withdrawn be set at creation?
+
+  // Unfortunately custom validation sucks in mongoose, so we do a workaround,
+  // if not, a single string as a tag will be coerced to an array
+  if (!req.body.tags || !Array.isArray(req.body.tags)){
+    return res.status(400).json({
+      error: '400 - Bad Request',
+      message: 'Tags missing'
+    });
+  }
   const product = new Product({
     name: req.body.name,
     description: req.body.description,
     category: req.body.category,
     tags: req.body.tags
   });
-  product.id = product._id;
+  product.id = product._id; //     //     //     //     // Should we keep user generated id????
   product
     .save()
     .then(resultedProduct => {
@@ -225,8 +232,15 @@ router.get('/:productId', (req, res, next) => {
     });
 });
 
-// Update EVERY attribute!
+// Update EVERY attribute!      //Should we also update withdrawn?
 router.put('/:productId', checkAuth, (req, res, next) => {
+  // Unfortunately custom validation sucks in mongoose, so we do a workaround
+  if (!req.body.tags || !Array.isArray(req.body.tags)){
+    return res.status(400).json({
+      error: '400 - Bad Request',
+      message: 'Tags missing'
+    });
+  }
   const id = req.params.productId;
   const updatedProduct = {
     name: req.body.name,
@@ -238,7 +252,7 @@ router.put('/:productId', checkAuth, (req, res, next) => {
     .findByIdAndUpdate(
       id,
       { $set: updatedProduct},
-      {new: true, runValidators: true}
+      {new: true, runValidators: true} // reminder, *update* validation only on updated fields
     )
     .select('-_id id name description category tags withdrawn')
     .exec()
@@ -270,7 +284,7 @@ router.put('/:productId', checkAuth, (req, res, next) => {
     });
 });
 
-// Patch ONLY ONE attribute!
+// Patch ONLY ONE attribute!      //Should we also update withdrawn?
 router.patch('/:productId', checkAuth, (req, res, next) => {
   const id = req.params.productId;
   const updatedProduct = {
@@ -289,6 +303,15 @@ router.patch('/:productId', checkAuth, (req, res, next) => {
     });
   } else {
     updatedField = uniqueField(updatedProduct);
+  }
+  if (updatedField.tags){
+  // Unfortunately custom validation sucks in mongoose, so we do a workaround
+    if (!Array.isArray(req.body.tags)){
+      return res.status(400).json({
+        error: '400 - Bad Request',
+        message: 'Tags missing'
+      });
+    }
   }
   Product
     .findByIdAndUpdate(
