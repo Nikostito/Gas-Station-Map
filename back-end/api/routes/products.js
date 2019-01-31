@@ -263,9 +263,9 @@ router.put('/:productId', checkAuth, (req, res, next) => {
         throw error;
       }
       console.log(resultedProduct);
-      res.status(200).json({
+      res.status(200).json(
         resultedProduct
-      });
+      );
     })
     .catch(err => {
       if (err.hasOwnProperty('name')){
@@ -328,9 +328,9 @@ router.patch('/:productId', checkAuth, (req, res, next) => {
         throw error;
       }
       console.log(resultedProduct);
-      res.status(200).json({
+      res.status(200).json(
         resultedProduct
-      });
+      );
     })
     .catch(err => {
       if (err.hasOwnProperty('name')){

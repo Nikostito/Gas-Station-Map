@@ -40,12 +40,123 @@ function uniqueField(prod){
   return result;
 }
 
+function queryValidator(q){
+  var newQuery = {
+    start: 0,
+    count: 20,
+    getWithdrawn: false,
+    getAll: false,
+    sortby: 'id',
+    sort: -1 // sort: -1 for descending
+  };
+
+  if (q.start){
+    q.start = Number.parseFloat(q.start);
+    if (Number.isInteger(q.start) && q.start >= 0){
+      newQuery.start = parseInt(q.start, 10);
+    } else {
+      const error = new Error();
+      error.status = 400;
+      error.message = 'Validation error: query start invalid';
+      throw error;
+    }
+  }
+  if (q.count){
+    q.count = Number.parseFloat(q.count);
+    if (Number.isInteger(q.count) && q.count >= 1){
+      newQuery.count = parseInt(q.count, 10);
+    } else {
+      const error = new Error();
+      error.status = 400;
+      error.message = 'Validation error: query count invalid';
+      throw error;
+    }
+  }
+  if (q.status){
+    if (isFinite(q.status))
+      q.status = 'nil';
+
+    const tmp = q.status.toUpperCase();
+    if (tmp === 'ALL'){
+      newQuery.getAll = true;
+    } else if (tmp === 'WITHDRAWN'){
+      newQuery.getWithdrawn = true;
+    } else if (tmp === 'ACTIVE'){
+      newQuery.getWithdrawn = false;
+    } else {
+      const error = new Error();
+      error.status = 400;
+      error.message = 'Validation error: query status invalid';
+      throw error;
+    }
+  }
+  if (q.sort){
+    const temp = q.sort.toLowerCase().split('|');
+    const condition1 = (temp.length === 2);
+    const condition2 = (temp[0] === 'id' || temp[0] === 'name');
+    const condition3 = (temp[1] === 'asc' || temp[1] === 'desc');
+    if (condition1 && condition2 && condition3){
+      newQuery.sortby = temp[0];
+      if (temp[1] === 'asc'){
+        newQuery.sort = 1;
+      } else {
+        newQuery.sort = -1;
+      }
+    } else {
+      const error = new Error();
+      error.status = 400;
+      error.message = 'Validation error: query sort invalid';
+      throw error;
+    }
+  }
+
+  return newQuery;
+}
+
 // GET list of shops
 router.get('/', (req, res, next) => {
-  res.status(200).json({
-    message: 'GEEEET',
-    lol: 'd'
-  });
+  const query = queryValidator(req.query);
+  // console.log(query);
+  let tempQuery = {
+    withdrawn: query.getWithdrawn
+  };
+  if (query.getAll){
+    delete tempQuery.withdrawn;
+  }
+  Shop
+    .find(tempQuery)
+    .skip(query.start)
+    .limit(query.count)
+    .sort({[query.sortby]: query.sort})
+    .select('-_id id name address lng lat tags withdrawn')
+    .lean() // experiment
+    .exec()
+    .then(shop => {
+      if (!shop.length > 0){
+        const error = new Error();
+        error.message = 'No shops';
+        error.status = 404;
+        throw error;
+      }
+      Shop
+        .where(tempQuery)
+        .countDocuments()
+        .lean()
+        .exec()
+        .then(count => {
+          res.status(200).json(
+            {
+              start: query.start,
+              count: query.count,
+              total: count,
+              shops: shop
+            });
+        });
+    })
+    .catch(err => {
+      next(err);
+    });
+
 });
 
 // Create a shop
@@ -156,9 +267,9 @@ router.put('/:shopId', checkAuth, (req, res, next) => {
         throw error;
       }
       console.log(resultedShop);
-      res.status(200).json({
+      res.status(200).json(
         resultedShop
-      });
+      );
     })
     .catch(err => {
       if (err.hasOwnProperty('name')){
@@ -222,9 +333,9 @@ router.patch('/:shopId', checkAuth, (req, res, next) => {
         throw error;
       }
       console.log(resultedShop);
-      res.status(200).json({
+      res.status(200).json(
         resultedShop
-      });
+      );
     })
     .catch(err => {
       if (err.hasOwnProperty('name')){
