@@ -3,6 +3,18 @@
 
 const mongoose = require('mongoose');
 
+const pointSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['Point'],
+    required: true
+  },
+  coordinates: {
+    type: [Number],
+    required: true
+  }
+});
+
 const shopSchema = mongoose.Schema({
   // Non strings do not throw validation error, but are coerced!!!!!!!!!!!!!!!!
   id: mongoose.Schema.Types.ObjectId,
@@ -13,6 +25,12 @@ const shopSchema = mongoose.Schema({
   // NO empty tag array allowed, BUT accepts integers that are the casted to strings
   tags: {type: [String], validate: v => v == null || v.length > 0},
   withdrawn: { type: Boolean, default: false },
+  location: {
+    type: pointSchema,
+    required: true
+  }
 });
+
+shopSchema.index({location: '2dsphere'});
 
 module.exports = mongoose.model('Shop', shopSchema);

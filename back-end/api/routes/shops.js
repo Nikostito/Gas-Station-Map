@@ -173,12 +173,15 @@ router.post('/', checkAuth, (req, res, next) => {
       message: 'Tags missing'
     });
   }
+  const coords = { type: 'Point', coordinates: [req.body.lng, req.body.lat] };//////////
   const shop = new Shop({
     name: req.body.name,
     address: req.body.address,
     lng: req.body.lng,
     lat: req.body.lat,
-    tags: req.body.tags
+    tags: req.body.tags,
+    location: coords,//////////////////////////////////
+    /// validate location coordinates?
   });
   shop.id = shop._id; //     //     //     //     // Should we keep user generated id????
   shop
