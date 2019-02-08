@@ -350,20 +350,18 @@ router.get('/', (req, res, next) => {
       if (query.shops.length > 0){
         arrShopId = lodash.intersectionBy(query.shops, arrShopId, lodash.toString);
       }
-      var priceCountQuery = Price
-        .aggregate()
-        .match({
-        // match product ids!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          shopId: { $in: arrShopId },
-          date: {$gte: parseInt(query.dateFrom, 10), $lte: parseInt(query.dateTo, 10)}
-        });
-      var priceQuery = Price
-        .aggregate()
-        .match({
-          // match product ids!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          shopId: { $in: arrShopId },
-          date: {$gte: parseInt(query.dateFrom, 10), $lte: parseInt(query.dateTo, 10)}
-        });
+
+      function commonQuery(){
+        return Price
+          .aggregate()
+          .match({
+            // match product ids!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            shopId: { $in: arrShopId },
+            date: {$gte: parseInt(query.dateFrom, 10), $lte: parseInt(query.dateTo, 10)}
+          });
+      }
+      var priceCountQuery = commonQuery();
+      var priceQuery = commonQuery();
       priceQuery = priceQuery
         .addFields({distance: { $arrayElemAt: [ arrShopDist, { $indexOfArray: [ arrShopId, '$shopId' ] } ] }});
       if (query.sortby === 'dist'){
@@ -385,6 +383,7 @@ router.get('/', (req, res, next) => {
           ]});
       }
 
+      const promisePriceCount = priceCountQuery.count('total').exec();
       const promisePrice = priceQuery
         .project({
           _id: 0,
@@ -400,7 +399,6 @@ router.get('/', (req, res, next) => {
           'productId.tags': 1,
         })
         .exec();
-      const promisePriceCount = priceCountQuery.count('total').exec();
       return Promise.all([promisePriceCount, promisePrice]);
     })
     .then(result => {
