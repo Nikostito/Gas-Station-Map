@@ -173,15 +173,14 @@ router.post('/', checkAuth, (req, res, next) => {
       message: 'Tags missing'
     });
   }
-  const coords = { type: 'Point', coordinates: [req.body.lng, req.body.lat] };//////////
+  const coords = { type: 'Point', coordinates: [req.body.lng, req.body.lat] }; // FIX PATCH/PUT COORDS
   const shop = new Shop({
     name: req.body.name,
     address: req.body.address,
     lng: req.body.lng,
     lat: req.body.lat,
     tags: req.body.tags,
-    location: coords,//////////////////////////////////
-    /// validate location coordinates?
+    location: coords,
   });
   shop.id = shop._id; //     //     //     //     // Should we keep user generated id????
   shop
@@ -198,7 +197,8 @@ router.post('/', checkAuth, (req, res, next) => {
           console.log(err);
           return res.status(400).json({
             error: '400 - Bad Request',
-            message: err.name
+            message: err.name,
+            details: err
           });
         }
       }
@@ -248,12 +248,14 @@ router.put('/:shopId', checkAuth, (req, res, next) => {
     });
   }
   const id = req.params.shopId;
+  const coords = { type: 'Point', coordinates: [req.body.lng, req.body.lat] };
   const updatedShop = {
     name: req.body.name,
     address: req.body.address,
     lng: req.body.lng,
     lat: req.body.lat,
-    tags: req.body.tags
+    tags: req.body.tags,
+    location: coords
   };
   Shop
     .findByIdAndUpdate(
@@ -321,6 +323,17 @@ router.patch('/:shopId', checkAuth, (req, res, next) => {
       });
     }
   }
+  // update internal geoJson lng and lat
+  if (updatedField.lng){
+    if (Math.abs(updatedField.lng) <= 180){
+      updatedField['location.coordinates.0'] = updatedField.lng;
+    }
+  }
+  if (updatedField.lat){
+    if (Math.abs(updatedField.lat) <= 90){
+      updatedField['location.coordinates.1'] = updatedField.lat;
+    }
+  }
   Shop
     .findByIdAndUpdate(
       id,
@@ -347,7 +360,8 @@ router.patch('/:shopId', checkAuth, (req, res, next) => {
           console.log(err);
           return res.status(400).json({
             error: '400 - Bad Request',
-            message: err.codeName ? err.codeName : err.name
+            message: err.codeName ? err.codeName : err.name,
+            details: err
           });
         }
       }

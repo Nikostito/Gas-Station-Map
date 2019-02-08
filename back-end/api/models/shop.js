@@ -33,4 +33,14 @@ const shopSchema = mongoose.Schema({
 
 shopSchema.index({location: '2dsphere'});
 
+function lngValidator(val) {
+  return Math.abs(val) <= 180;
+}
+shopSchema.path('lng').validate(lngValidator, 'validation of `{PATH}` failed with absolute value `{VALUE}` > 180');
+
+function latValidator(val) {
+  return Math.abs(val) <= 90;
+}
+shopSchema.path('lat').validate(latValidator, 'validation of `{PATH}` failed with absolute value `{VALUE}` > 90');
+
 module.exports = mongoose.model('Shop', shopSchema);

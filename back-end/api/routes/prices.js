@@ -38,32 +38,81 @@ function resultWrapper(rawResult, query){
   var result = {};
   result.start = query.start;
   result.count = query.count;
-  result.total = rawResult[0][0].total;
+  result.total = rawResult[0][0] ? rawResult[0][0].total : 0;
   result.prices = priceWrapper(rawResult[1], query);
   return result;
 }
 
-function getGeoQueryUnsorted(query){
-  return Shop
-    .find({
-      location: {
-        $geoWithin: {
-          /* https://docs.mongodb.com/manual/tutorial/
-calculate-distances-using-spherical-geometry-with-2d-geospatial-indexes/*/
-          $centerSphere: [
-            [ query.geoLng, query.geoLat ], query.geoDist / 6378.1
-          ]
-        }
-      }
-    })
-    .select('_id')
-    .lean()
-    .exec();
-/*  .then(result => {
-      const ids = result.map(x => x._id);
-      console.log(ids);
-    });*/
-}
+// function getGeoQueryUnsorted(query){
+//   var mongoQuery = Price
+//     .find()
+//     .skip(query.start)
+//     .limit(query.count)
+//     .where('date').gte(query.dateFrom).lte(query.dateTo);
+//   return Shop
+//     .find({
+//       location: {
+//         $geoWithin: {
+//           /* https://docs.mongodb.com/manual/tutorial/
+// calculate-distances-using-spherical-geometry-with-2d-geospatial-indexes/*/
+//           $centerSphere: [
+//             [ query.geoLng, query.geoLat ], query.geoDist / 6378.1
+//           ]
+//         }
+//       }
+//     })
+//     .select('_id')
+//     .lean()
+//     .exec()
+//     .then(result => {
+//       if (!result.length > 0){
+//         throw quikError(404, 'empty search'); //
+//       }
+//       const geoIds = result.map(x => x._id.toString());
+//       var shopIds;
+//       if (query.shops.length > 0){
+//         shopIds = lodash.intersection(query.shops, geoIds);
+//       } else {
+//         shopIds = geoIds;
+//       }
+//       mongoQuery = mongoQuery.where('shopId').in(shopIds); // implement also tags
+//       if (query.products.length > 0){
+//         mongoQuery = mongoQuery.where('productId').in(query.products);
+//       }
+//       if (query.sortby === 'price' || query.sortby === 'date'){
+//         mongoQuery = mongoQuery.sort({[query.sortby]: query.sort});
+//       }
+//       return mongoQuery
+//         .select('-_id -__v')
+//         .populate({
+//           path: 'productId',
+//           select: '-_id id name tags',
+//         })
+//         .populate({
+//           path: 'shopId',
+//           select: '-_id id name tags address',
+//         })
+//         .exec();
+//     })
+//     .then(prices => {
+//       res.status(200).json(
+//         prices
+//       );
+//     })
+//     .catch(err => {
+//       console.log(err);
+//       if (err.name === 'CastError' || err.status === 404){
+//         return res.status(404).json({
+//           message: 'Wrong id(s)',
+//           err: err.message
+//         });
+//       }
+//       res.status(500).json({
+//         error: err
+//       });
+//     });
+// }
+
 function getGeoQuerySorted(query){
   /* https://docs.mongodb.com/manual/reference/
 operator/aggregation/geoNear/#pipe._S_geoNear*/
@@ -78,16 +127,12 @@ operator/aggregation/geoNear/#pipe._S_geoNear*/
         spherical: true,
         distanceField: 'distance',
         // limit: should be TOTAL shop count to account for reverse order
-        limit: 999999,
+        limit: 9999999, // shops limit
         distanceMultiplier: 0.001 // m to km
       }}
     ])
     .project('_id distance')
     .exec();
-/*    .then(r => {
-    console.log(r);
-    res.status(200).json(r);
-  });*/
 }
 
 function quikError(status, message){
@@ -105,7 +150,7 @@ function priceValidationAndTransformation(p){
     throw error;
   }
   // Number.isFinite() does NOT accept strings
-  if (p.price <= 0 || !Number.isFinite(p.price)){ // let zero prices???????????????????????
+  if (p.price <= 0 || !Number.isFinite(p.price)){ // let zero prices?
     const error = new Error();
     error.status = 400;
     error.message = 'Validation error: price';
@@ -171,9 +216,9 @@ function priceQueryValidator(q){
     shops: [],
     products: [],
     tags: [],
-    geoDist: -1,
-    geoLng: 0,
-    geoLat: 0,
+    geoDist: 20036, // approx max distance on earth
+    geoLng: 23.7828, // ntua ece location
+    geoLat: 37.9794,
     sortby: 'price',
     sort: 1 // sort: +1 for ascending
   };
@@ -186,7 +231,10 @@ function priceQueryValidator(q){
     } else {
       if (!isFinite(q.geoDist) || q.geoDist <= 0
       || !isFinite(q.geoLng || !isFinite(q.geoLat))){
-        throw quikError(400, 'Validation error: geolocation');
+        throw quikError(400, 'Validation error: infinity or negative distance');
+      }
+      if (Math.abs(q.geoLng) > 180 || Math.abs(q.geoLat) > 90){
+        throw quikError(400, 'Validation error: |latitude|<90, |longitude|<180');
       }
       newQuery.geoDist = Number.parseFloat(q.geoDist);
       newQuery.geoLng = Number.parseFloat(q.geoLng);
@@ -242,7 +290,7 @@ function priceQueryValidator(q){
     }
     newQuery.products = q.products;
   }
-  if (q.shops){/////////////////////////////////////////// validate ids
+  if (q.shops){/////////////////////////////////////////// validate ids (or not)
     if (!Array.isArray(q.shops)){
       q.shops = [q.shops];
     }
@@ -257,7 +305,9 @@ function priceQueryValidator(q){
   if (q.sort){
     const temp = q.sort.toLowerCase().split('|');
     const condition1 = (temp.length === 2);
-    const condition2 = (temp[0] === 'dist' || temp[0] === 'date' || temp[0] === 'price');
+    const condition2 = (temp[0] === 'dist' ||
+                        temp[0] === 'date' ||
+                        temp[0] === 'price');
     const condition3 = (temp[1] === 'asc' || temp[1] === 'desc');
     if (condition1 && condition2 && condition3){
       newQuery.sortby = temp[0];
@@ -280,215 +330,100 @@ function priceQueryValidator(q){
 // GET list of prices
 router.get('/', (req, res, next) => {
   const query = priceQueryValidator(req.query);
-  const geoQueryUnsorted = getGeoQueryUnsorted(query);
+  //  const geoQueryUnsorted = getGeoQueryUnsorted(query);
   const geoQuerySorted = getGeoQuerySorted(query);
-  var mongoQuery = Price
-    .find()
-    .skip(query.start)
-    .limit(query.count)
-    .where('date').gte(query.dateFrom).lte(query.dateTo);
 
-  if (query.geoDist > 0){ // product + shops + !tags! + geoQuery...
-    if (query.sortby === 'dist'){ // product + shops + !tags! + geoQuery Sorted
-      let arrShopId = [];
-      let arrShopDist = [];
-      geoQuerySorted
-        .then(result => {
-          for (const key in result) {
-            arrShopId.push(result[key]._id);
-            arrShopDist.push(result[key].distance);
-          }
-          try { // SHOULD VALIDATE IN FUNCTION !
-            query.shops = query.shops.map(mongoose.Types.ObjectId);
-          } catch (error) {
-            throw quikError(400, 'wrong shops id(s)');
-          }
+  let arrShopId = [];
+  let arrShopDist = [];
+  geoQuerySorted
+    .then(result => {
+      for (const key in result) {
+        arrShopId.push(result[key]._id);
+        arrShopDist.push(result[key].distance);
+      }
+      try { // SHOULD VALIDATE IN FUNCTION ! or not if ids are custom
+        query.shops = query.shops.map(mongoose.Types.ObjectId);
+      } catch (error) {
+        throw quikError(400, 'wrong shops id(s)');
+      }
 
-          if (query.shops.length > 0){
-            arrShopId = lodash.intersectionBy(query.shops, arrShopId, lodash.toString);
-          }
-          var priceQuery = Price
-            .aggregate()
-            .match({
-              shopId: { $in: arrShopId },
-              date: {$gte: parseInt(query.dateFrom, 10), $lte: parseInt(query.dateTo, 10)}
-            })
-//            .match({ shopId: { $in: arrShopId }})
-//            .match({date: {$gte: parseInt(query.dateFrom, 10), $lte: parseInt(query.dateTo, 10)}})
-            .addFields({distance: { $arrayElemAt: [ arrShopDist, { $indexOfArray: [ arrShopId, '$shopId' ] } ] }})
-            .sort({distance: query.sort})
-            .lookup({ from: 'shops', localField: 'shopId', foreignField: '_id', as: 'shopId' })
-            .lookup({ from: 'products', localField: 'productId', foreignField: '_id', as: 'productId' })
-            .skip(query.start)
-            .limit(query.count)
-            .unwind('shopId', 'productId');
-          if (query.tags.length > 0){
-            priceQuery = priceQuery
-              .match({ $or: [
-                {'shopId.tags': { $in: query.tags }},
-                {'productId.tags': { $in: query.tags }}
-              ]});
-          }
-          
-          const promisePrice = priceQuery
-            .project({
-              _id: 0,
-              price: 1,
-              date: 1,
-              distance: 1,
-              'shopId.id': 1,
-              'shopId.name': 1,
-              'shopId.tags': 1,
-              'shopId.address': 1,
-              'productId.id': 1,
-              'productId.name': 1,
-              'productId.tags': 1,
-            })
-            .exec();
-          // 'promisePrice' & 'promisePriceCount' are NOT independent objects.
-          // As a side effect, that means that they should NOT change order.
-          const promisePriceCount = priceQuery.count('total').exec();
-          return Promise.all([promisePriceCount, promisePrice]);
-        })
-        .then(result => {
-          console.log(result[1]); ///////////////////////////////////////////////// to be deleted
-          return res.status(200).json(resultWrapper(result, query));
-        })
-        .catch(err => {
-          console.log(err);
-          if (err.status && err.message){
-            return res.status(err.status).json({
-              error: err
-            });
-          }
-          if (err.name === 'CastError'){
-            return res.status(400).json({
-              message: err.name,
-              err: err.message
-            });
-          }
-          res.status(500).json({
-            error: err
-          });
+      if (query.shops.length > 0){
+        arrShopId = lodash.intersectionBy(query.shops, arrShopId, lodash.toString);
+      }
+      var priceCountQuery = Price
+        .aggregate()
+        .match({
+        // match product ids!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          shopId: { $in: arrShopId },
+          date: {$gte: parseInt(query.dateFrom, 10), $lte: parseInt(query.dateTo, 10)}
         });
-
-      
-    } else { // product + shops + !tags! + geoQuery Unsorted
-      geoQueryUnsorted
-        .then(result => {
-          if (!result.length > 0){
-            throw quikError(404, 'empty search'); //
-          }
-          const geoIds = result.map(x => x._id.toString());
-          var shopIds;
-          if (query.shops.length > 0){
-            shopIds = lodash.intersection(query.shops, geoIds);
-          } else {
-            shopIds = geoIds;
-          }
-          mongoQuery = mongoQuery.where('shopId').in(shopIds); // implement also tags
-          if (query.products.length > 0){
-            mongoQuery = mongoQuery.where('productId').in(query.products);
-          }
-          if (query.sortby === 'price' || query.sortby === 'date'){
-            mongoQuery = mongoQuery.sort({[query.sortby]: query.sort});
-          }
-          return mongoQuery
-            .select('-_id -__v')
-            .populate({
-              path: 'productId',
-              select: '-_id id name tags',
-            })
-            .populate({
-              path: 'shopId',
-              select: '-_id id name tags address',
-            })
-            .exec();
-        })
-        .then(prices => {
-          res.status(200).json(
-            prices
-          );
-        })
-        .catch(err => {
-          console.log(err);
-          if (err.name === 'CastError' || err.status === 404){
-            return res.status(404).json({
-              message: 'Wrong id(s)',
-              err: err.message
-            });
-          }
-          res.status(500).json({
-            error: err
-          });
+      var priceQuery = Price
+        .aggregate()
+        .match({
+          // match product ids!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          shopId: { $in: arrShopId },
+          date: {$gte: parseInt(query.dateFrom, 10), $lte: parseInt(query.dateTo, 10)}
         });
-    }
-  } else {
-    // product + shops + !tags!
+      priceQuery = priceQuery
+        .addFields({distance: { $arrayElemAt: [ arrShopDist, { $indexOfArray: [ arrShopId, '$shopId' ] } ] }});
+      if (query.sortby === 'dist'){
+        priceQuery = priceQuery.sort({distance: query.sort});
+      } else {
+        priceQuery = priceQuery.sort({[query.sortby]: query.sort});
+      }
+      priceQuery = priceQuery
+        .lookup({ from: 'shops', localField: 'shopId', foreignField: '_id', as: 'shopId' })
+        .lookup({ from: 'products', localField: 'productId', foreignField: '_id', as: 'productId' })
+        .skip(query.start)
+        .limit(query.count)
+        .unwind('shopId', 'productId');
+      if (query.tags.length > 0){
+        priceQuery = priceQuery
+          .match({ $or: [
+            {'shopId.tags': { $in: query.tags }},
+            {'productId.tags': { $in: query.tags }}
+          ]});
+      }
 
-  }
-  ///////////////////////////////////////////////////////////////////
-  /*
-  if (query.tags.length > 0){
-        mongoQuery = mongoQuery
-      .populate
-    //TODO -TO_ASK
-    //also check with sortby dist
-  }
-  if (query.products.length > 0){
-    mongoQuery = mongoQuery.where('productId').in(query.products);
-  }
-  if (query.shops.length > 0){
-    mongoQuery = mongoQuery.where('shopId').in(query.shops);
-  }
-  if (query.sortby === 'price' || query.sortby === 'date'){
-    mongoQuery = mongoQuery.sort({[query.sortby]: query.sort});
-  }
-  if (query.geoDist > 0){////
-    console.log('not sorting by distance');
-    mongoQuery = mongoQuery
-      .populate({
-        path: 'shopId',
-        select: '-_id id name tags address',
-        match: {
-          location: {
-            $geoWithin: {
-              // https://docs.mongodb.com/manual/tutorial/calculate-distances-using-spherical-geometry-with-2d-geospatial-indexes/
-              $centerSphere: [
-                [ query.geoLng, query.geoLat ], query.geoDist / 6378.1
-              ]
-            }
-          }
-        }
-      });
-  }
-  //    .sort({[query.sortby]: query.sort})
-  
-  mongoQuery
-    .select('-_id -__v')
-    .populate({
-      path: 'productId',
-      select: '-_id id name tags',
-
+      const promisePrice = priceQuery
+        .project({
+          _id: 0,
+          price: 1,
+          date: 1,
+          distance: 1,
+          'shopId.id': 1,
+          'shopId.name': 1,
+          'shopId.tags': 1,
+          'shopId.address': 1,
+          'productId.id': 1,
+          'productId.name': 1,
+          'productId.tags': 1,
+        })
+        .exec();
+      const promisePriceCount = priceCountQuery.count('total').exec();
+      return Promise.all([promisePriceCount, promisePrice]);
     })
-    .exec()
-    .then(prices => {
-      res.status(200).json(
-        prices
-      );
+    .then(result => {
+      console.log(result[1]); ///////////////////////////////////////////////// to be deleted
+      return res.status(200).json(resultWrapper(result, query));
     })
     .catch(err => {
       console.log(err);
-      if (err.name === 'CastError' || err.status === 404){
-        return res.status(404).json({
-          message: 'Wrong id(s)',
+      if (err.status && err.message){
+        return res.status(err.status).json({
+          error: err
+        });
+      }
+      if (err.name === 'CastError'){
+        return res.status(400).json({
+          message: err.name,
           err: err.message
         });
       }
       res.status(500).json({
         error: err
       });
-    });*/
+    });
 });
 
 // POST a new price for a given product in a given shop
