@@ -48,7 +48,9 @@ router.post('/', (req, res, next) => {
                 });
               }
               return res.status(200)
-                .header(process.env.AUTH_HEADER, jwtToken).json();
+                .header(process.env.AUTH_HEADER, jwtToken).json({
+                  // token: 'ABC123' //todo/fix////saiko tester/////////////jwtToken
+                });
 
             }
           );

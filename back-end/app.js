@@ -15,7 +15,26 @@ if (process.env.NODE_ENV !== 'production'){
   const morgan = require('morgan');
   app.use(morgan('dev'));
 }
+// x-www-url for the Saiko tester/////////////////////////////////////////////////
+const { parse } = require('querystring');
 
+app.use(function saikoParser(req, res, next){
+  const FORM = 'application/x-www-form-urlencoded; charset=ISO-8859-1';
+  if (FORM === req.headers['content-type']){
+    if (req.method === 'POST'){
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk.toString();
+      });
+      req.on('end', () => {
+        req.body = JSON.parse(JSON.stringify(parse(body)));
+        next();
+      });
+    }
+  } else {
+    next();
+  }
+});
 
 const baseURL = '/observatory/api';
 
@@ -29,9 +48,6 @@ db.once('open', function() {
   console.log('mongoose connected!');
 });
 
-app.use(bodyParser.urlencoded({
-  extended: false
-}));
 app.use(bodyParser.json());
 
 // Allow CORS
@@ -74,6 +90,7 @@ app.use((req, res, next) => {
 });
 //  Error handling
 app.use((error, req, res, next) => {
+  console.log(error);
   res.status(error.status || 501);
   res.json({
     error: {
