@@ -6,6 +6,7 @@ const express = require('express');
 const router = express.Router();
 const checkAuth = require('../middleware/check-auth');
 const Product = require('../models/product');
+const Price = require('../models/price');
 
 function productWrapper(){
   var newProduct = {
@@ -365,7 +366,12 @@ router.delete('/:productId', checkAuth, (req, res, next) => {
           error.name = 'Null product';
           throw error;
         }
-        // TODO: Delete price as well (?Should empty shops be deleted? Probably not)
+        // Delete prices as well
+        return Price.deleteMany({ productId: id}).exec();
+      })
+      .then(result => {
+        console.log('prices delete result');
+        console.log(result);
         res.status(200).json({
           message: 'OK'
         });

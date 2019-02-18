@@ -6,6 +6,7 @@ const express = require('express');
 const router = express.Router();
 const checkAuth = require('../middleware/check-auth');
 const Shop = require('../models/shop');
+const Price = require('../models/price');
 
 function shopWrapper(){
   var newShop = {
@@ -387,9 +388,12 @@ router.delete('/:shopId', checkAuth, (req, res, next) => {
           error.name = 'Null shop';
           throw error;
         }
-        // TODO: Delete all prices that match the shop
-        //       What about products that aren't sold at any other shops?
-        //       Delete them as well?
+        // Delete all prices that match the shop
+        return Price.deleteMany({ shopId: id}).exec();
+      })
+      .then(result => {
+        console.log('prices delete result');
+        console.log(result);
         res.status(200).json({
           message: 'OK'
         });
