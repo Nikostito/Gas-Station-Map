@@ -47,11 +47,7 @@ router.post('/', (req, res, next) => {
                   error: err
                 });
               }
-              return res.status(200)
-                .header(process.env.AUTH_HEADER, jwtToken).json({
-                  // token: 'ABC123' //todo/fix////saiko tester/////////////jwtToken
-                });
-
+              return res.status(200).json({token: jwtToken});
             }
           );
           /* Possible non-atomic push? (also look @ mongoose _v)
