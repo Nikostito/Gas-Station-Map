@@ -288,11 +288,21 @@ function priceQueryValidator(q){
     if (!Array.isArray(q.products)){
       q.products = [q.products];
     }
+    try {
+      q.products = q.products.map(mongoose.Types.ObjectId);
+    } catch (error) {
+      throw quikError(400, 'wrong product id(s)');
+    }
     newQuery.products = q.products;
   }
   if (q.shops){/////////////////////////////////////////// validate ids (or not)
     if (!Array.isArray(q.shops)){
       q.shops = [q.shops];
+    }
+    try {
+      q.shops = q.shops.map(mongoose.Types.ObjectId);
+    } catch (error) {
+      throw quikError(400, 'wrong shop id(s)');
     }
     newQuery.shops = q.shops;
   }
@@ -341,24 +351,25 @@ router.get('/', (req, res, next) => {
         arrShopId.push(result[key]._id);
         arrShopDist.push(result[key].distance);
       }
-      try { // SHOULD VALIDATE IN FUNCTION ! or not if ids are custom
-        query.shops = query.shops.map(mongoose.Types.ObjectId);
-      } catch (error) {
-        throw quikError(400, 'wrong shops id(s)');
-      }
 
       if (query.shops.length > 0){
         arrShopId = lodash.intersectionBy(query.shops, arrShopId, lodash.toString);
       }
 
       function commonQuery(){
-        return Price
+        var commonQ = Price
           .aggregate()
           .match({
             // match product ids!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             shopId: { $in: arrShopId },
             date: {$gte: parseInt(query.dateFrom, 10), $lte: parseInt(query.dateTo, 10)}
           });
+        if (query.products.length > 0){
+          commonQ.match({
+            productId: { $in: query.products}
+          });
+        }
+        return commonQ;
       }
       var priceCountQuery = commonQuery();
       var priceQuery = commonQuery();
