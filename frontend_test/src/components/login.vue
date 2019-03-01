@@ -48,7 +48,7 @@ export default {
           username: username,
           password: password
       }
-      axios.post("http://localhost:8765/observatory/api/login", data)
+      axios.post("https://localhost:8765/observatory/api/login", data)
         .then((response) => {
             localStorage.setItem('token',response.data.token);
             slf.showLogin = false;
@@ -66,7 +66,7 @@ export default {
     logout(e){
     e.preventDefault()
     let logout = () => {
-      axios.post("http://localhost:8765/observatory/api/logout", null, {headers: {'X-OBSERVATORY-AUTH':localStorage.token}})
+      axios.post("https://localhost:8765/observatory/api/logout", null, {headers: {'X-OBSERVATORY-AUTH':localStorage.token}})
         .then((response) => {
           this.showLogin = true;
           alert("Έχετε αποσυνδεθεί!")
@@ -81,7 +81,7 @@ export default {
   }
 },
   mounted(){
-    axios.post("http://localhost:8765/observatory/api/authorized", null, {headers: {'X-OBSERVATORY-AUTH':localStorage.token}})
+    axios.post("https://localhost:8765/observatory/api/authorized", null, {headers: {'X-OBSERVATORY-AUTH':localStorage.token}})
       .then(res => {
         this.showLogin = false;
       })

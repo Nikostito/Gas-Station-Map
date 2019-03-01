@@ -41,7 +41,7 @@ export default {
     }
   },
   mounted(){
-    axios.post("http://localhost:8765/observatory/api/authorized", null, {headers: {'X-OBSERVATORY-AUTH':localStorage.token}})
+    axios.post("https://localhost:8765/observatory/api/authorized", null, {headers: {'X-OBSERVATORY-AUTH':localStorage.token}})
       .then(res => {
         this.showLogin = false;
       })

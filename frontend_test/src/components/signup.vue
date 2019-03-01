@@ -38,9 +38,9 @@ export default {
           password: password
         }
 
-        axios.post("http://localhost:8765/observatory/api/signup", data)
+        axios.post("https://localhost:8765/observatory/api/signup", data)
           .then((response) => {
-            alert("Έχετε εγγραφεί με επιτυχία! Προχωρήστε στο Login.")            
+            alert("Έχετε εγγραφεί με επιτυχία! Προχωρήστε στο Login.")
             router.push("/login")
           })
           .catch((errors) => {
