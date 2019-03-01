@@ -73,6 +73,7 @@ const priceRoutes = require('./api/routes/prices');
 const signupRoute = require('./api/routes/signup');
 const loginRoute = require('./api/routes/login');
 const logoutRoute = require('./api/routes/logout');
+const authorizedRoute = require('./api/routes/authorized');
 
 //  Routes handling requests
 app.use(baseURL + '/products', productRoutes);
@@ -81,6 +82,7 @@ app.use(baseURL + '/prices', priceRoutes);
 app.use(baseURL + '/signup', signupRoute);
 app.use(baseURL + '/login', loginRoute);
 app.use(baseURL + '/logout', logoutRoute);
+app.use(baseURL + '/authorized', authorizedRoute);
 
 //  Default matching throws 404
 app.use((req, res, next) => {
