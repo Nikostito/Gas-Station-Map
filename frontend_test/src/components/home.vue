@@ -14,8 +14,11 @@
 <li class="nav-item">
   <a class="nav-link" href="/signup">Εγγραφη</a>
 </li>
-<li class="nav-item">
+<li class="nav-setItem" v-if="showLogin">
   <a class="nav-link" href="/login">Συνδεση</a>
+</li>
+<li class="nav-item" v-else="!showLogin">
+  <a class="nav-link" href="/login">Αποσυνδεση</a>
 </li>
 <li class="nav-item">
   <a class="nav-link" href="#">Πρατηρια</a>
@@ -30,7 +33,22 @@
 </div>
 </template>
 <script>
+import axios from "axios"
 export default {
+  data(){
+    return {
+      showLogin:true,
+    }
+  },
+  mounted(){
+    axios.post("http://localhost:8765/observatory/api/authorized", null, {headers: {'X-OBSERVATORY-AUTH':localStorage.token}})
+      .then(res => {
+        this.showLogin = false;
+      })
+      .catch((errors) => {
+        this.showLogin = true;
+      })
+  }
 };
 </script>
 <style lang="scss">

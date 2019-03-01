@@ -5,10 +5,13 @@ if (!port) {
   console.log('Please start the server with "npm start"');
   return -1;
 }
-const http = require('http');
+const https = require('https');
 const app = require('./app');
+const fs = require('fs')
 
 
-const server = http.createServer(app);
-
+const server = https.createServer({
+  key: fs.readFileSync('server.key'),
+ cert: fs.readFileSync('server.cert')},
+ app);
 server.listen(port);
