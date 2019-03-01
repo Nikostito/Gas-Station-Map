@@ -7,13 +7,15 @@ const checkAuth = require('../middleware/check-auth');
 
 router.get('/', checkAuth, (req, res, next) => {
   res.status(200).json({
-    message: 'OK'
+    user:  req.userDataTakenFromJwtToken,
+    isAdmin: req.userHasAdminPriviledges
   });
 });
 
 router.post('/', checkAuth, (req, res, next) => {
   res.status(200).json({
-    message: 'OK'
+    user:  req.userDataTakenFromJwtToken,
+    isAdmin: req.userHasAdminPriviledges
   });
 });
 
