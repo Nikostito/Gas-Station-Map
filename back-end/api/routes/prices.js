@@ -30,6 +30,10 @@ function priceWrapper(price, query){
       shopTags: p.shopId.tags,
       shopAddress: p.shopId.address,
       shopDist: Math.round(p.distance),
+      /* CAUTION <--extra key-value pairs, not specified in the API! */
+      lon: p.shopId.lng,
+      lat: p.shopId.lat,
+      /* also look in GET (search CAUTION)-->*/
     };
   });
 }
@@ -405,6 +409,10 @@ router.get('/', (req, res, next) => {
           'shopId.name': 1,
           'shopId.tags': 1,
           'shopId.address': 1,
+          /* CAUTION <--extra key-value pairs, not specified in the API! */
+          'shopId.lng':1,
+          'shopId.lat':1,
+          /* also look in result price wrapper (search CAUTION)-->*/
           'productId.id': 1,
           'productId.name': 1,
           'productId.tags': 1,
