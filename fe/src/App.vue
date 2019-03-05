@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <meta name="mobile-web-app-capable" content="yes">
     <Login/>
     <GoogleMap/>
   </div>
