@@ -166,12 +166,12 @@ router.post('/', checkAuth, (req, res, next) => {
 
   // Unfortunately custom validation sucks in mongoose, so we do a workaround,
   // if not, a single string as a tag will be coerced to an array
-  if (!req.body.tags || !Array.isArray(req.body.tags)){
-    return res.status(400).json({
-      error: '400 - Bad Request',
-      message: 'Tags missing'
-    });
-  }
+  // if (!req.body.tags || !Array.isArray(req.body.tags)){
+  //   return res.status(450).json({
+  //     error: '400 - Bad Request',
+  //     message: 'Tags missing'
+  //   });
+  // }
   const product = new Product({
     name: req.body.name,
     description: req.body.description,

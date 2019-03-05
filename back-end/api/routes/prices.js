@@ -38,6 +38,18 @@ function priceWrapper(price, query){
   });
 }
 
+function resPriceWrapper(price){
+  return price.map(p => {
+    return {
+      id: p._id,
+      price: p.price,
+      date: p.date,
+      productId: p.productId,
+      shopId: p.shopId
+    };
+  });
+}
+
 function resultWrapper(rawResult, query){
   var result = {};
   result.start = query.start;
@@ -154,6 +166,7 @@ function priceValidationAndTransformation(p){
     throw error;
   }
   // Number.isFinite() does NOT accept strings
+  p.price = Number.parseFloat(p.price);
   if (p.price <= 0 || !Number.isFinite(p.price)){ // let zero prices?
     const error = new Error();
     error.status = 400;
@@ -467,7 +480,7 @@ router.post('/', checkAuth, (req, res, next) => {
     })
     .then(result => {
       // FIND OUT HOW TO PRESENT PRICE RESULTS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      res.status(200).json(result);
+      res.status(200).json(resPriceWrapper(result));
     })
     .catch(err => {
       console.log(err);

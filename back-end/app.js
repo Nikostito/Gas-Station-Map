@@ -36,6 +36,7 @@ app.use(function saikoParser(req, res, next){
   }
 });
 
+app.disable('etag');
 const baseURL = '/observatory/api';
 
 mongoose.set('useNewUrlParser', true);
@@ -49,6 +50,7 @@ db.once('open', function() {
 });
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
 // Allow CORS
 app.use((req, res, next) => {
