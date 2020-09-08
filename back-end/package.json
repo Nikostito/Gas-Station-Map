@@ -15,7 +15,7 @@
   "author": "Bits Please",
   "license": "ISC",
   "dependencies": {
-    "bcrypt": "^3.0.3",
+    "bcrypt": "^5.0.0",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "iconv-lite": "^0.4.24",
