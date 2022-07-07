@@ -21,7 +21,7 @@
     "iconv-lite": "^0.4.24",
     "jsonwebtoken": "^8.4.0",
     "lodash": "^4.17.19",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "mongoose": "^5.7.5"
   },
   "devDependencies": {
