@@ -19,7 +19,7 @@
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "iconv-lite": "^0.4.24",
-    "jsonwebtoken": "^8.4.0",
+    "jsonwebtoken": "^9.0.0",
     "lodash": "^4.17.19",
     "moment": "^2.24.0",
     "mongoose": "^5.7.5"
